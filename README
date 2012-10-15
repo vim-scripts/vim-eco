@@ -1,0 +1,13 @@
+This is a mirror of http://www.vim.org/scripts/script.php?script_id=4270
+
+This project adds eco support to the vim editor. Most of the code is originally from Mick Koch's vim-coffee-script (http://www.vim.org/scripts/script.php?script_id=3590) and some of the features (most notably syntax highlighting) depend on installing that plugin as well.
+
+Included features:
+  - eco filetype detection
+  - automatic indenting
+  - syntax highlighting
+  - surround.vim support
+
+Please see the project page for much more information:
+http://github.com/AndrewRadev/vim-eco
+
