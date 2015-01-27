@@ -6,9 +6,31 @@ if exists("b:did_ftplugin")
   finish
 endif
 
+runtime! ftplugin/html.vim ftplugin/html_*.vim ftplugin/html/*.vim
 let b:did_ftplugin = 1
 
-" surround.vim additions for eco files
+" Matchit support, adding to the html one
+let s:match_words =
+      \ '\<\%(if\|unless\|switch\|while\|until\|for\)\>=\@!' .
+      \ ':' .
+      \ '\<\%(else\|elsif\|when\|break\|continue\)\>' .
+      \ ':' .
+      \ '\<end\>' .
+      \ ',{:},\[:\],(:)'
+
+if exists('b:match_words')
+  let b:match_words = b:match_words . ',' .s:match_words
+else
+  let b:match_words = s:match_words
+endif
+
+let b:match_skip =
+      \ "synIDattr(synID(line('.'),col('.'),0),'name') =~ '" .
+      \ "\\<coffee\\%(String\\|BlockComment\\|Heredoc\\|Comment\\)\\|".
+      \ "\\<ecoComment\\>".
+      \ "'"
+
+" surround.vim additions
 "
 " Usage:
 "   yss% : Surrounds current line with <% %>
@@ -39,4 +61,43 @@ if exists("g:loaded_surround")
   endif
 endif
 
-" End surround.vim addditions
+" Text object for embedded code (<%= ... %>)
+" For instance, given the following code:
+"
+"   <%- foo("bar") %>
+"
+" Typing ci= would leave only the following:
+"
+"   <%-  %>
+"
+" And place the cursor in insert mode in the empty space left over.
+"
+" Define a text object for embedded code (<%= ... %>)
+onoremap <buffer> a= :<c-u>call <SID>EcoTextObject('a')<cr>
+xnoremap <buffer> a= :<c-u>call <SID>EcoTextObject('a')<cr>
+onoremap <buffer> i= :<c-u>call <SID>EcoTextObject('i')<cr>
+xnoremap <buffer> i= :<c-u>call <SID>EcoTextObject('i')<cr>
+function! s:EcoTextObject(mode)
+  if search('<%.*\%#.*%>', 'n') <= 0
+    return
+  endif
+
+  if a:mode == 'i'
+    let [start_flags, end_flags] = ['be', '']
+  else " a:mode == 'a'
+    let [start_flags, end_flags] = ['b', 'e']
+  endif
+
+  call search('<%[=-]\?\s*.', start_flags, line('.'))
+  let start = col('.') - 1
+  call search('.\s*%>', end_flags, line('.'))
+  let end = col('.') - 1
+
+  let interval = end - start
+
+  if start == 0
+    exe 'normal! 0v'.interval.'l'
+  else
+    exe 'normal! 0'.start.'lv'.interval.'l'
+  endif
+endfunction

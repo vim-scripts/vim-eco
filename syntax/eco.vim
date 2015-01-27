@@ -41,6 +41,7 @@ endif
 
 if exists("b:eco_subtype") && b:eco_subtype != '' && b:eco_subtype != 'eco'
   exec "runtime! syntax/".b:eco_subtype.".vim"
+  silent! unlet b:current_syntax
   syn include @coffeeTop syntax/coffee.vim
 endif
 
@@ -50,9 +51,19 @@ syn region ecoBlock matchgroup=ecoDelimiter start=/<%/ end=/%>/ contains=@coffee
 syn region ecoExpression matchgroup=ecoDelimiter start=/<%[=\-]/ end=/%>/ contains=@coffeeTop containedin=ALLBUT,@ecoRegions keepend
 syn region ecoComment matchgroup=ecoComment start=/<%#/ end=/%>/ contains=@coffeeTodo,@Spell containedin=ALLBUT,@ecoRegions keepend
 
-" eco features not in coffeescript proper
+" Eco features not in coffeescript proper
 syn keyword ecoEnd end containedin=@ecoRegions
 syn match ecoIndentColon /\s+\w+:/ containedin=@ecoRegions
+
+" Missing colon errors. These show errors if you haven't ended a block-level
+" clause with ":". They attempt to avoid the following:
+"
+"   - single-line postfix forms:      "foo" if bar()
+"   - single-line if-then-else forms: if bar() then "foo" else "baz"
+"
+syn match ecoMissingColonError /\(<%[=-]\=\s*\)\@<=else\>\ze[^:]\{-}\s*%>/ containedin=@ecoRegions
+syn match ecoMissingColonError /\(<%[=-]\=\s*\)\@<=if\>\%(.*then.*else\)\@![^:]\{-}\ze\s*%>/ containedin=@ecoRegions
+syn match ecoMissingColonError /\(<%[=-]\=\s*\)\@<=for\>[^:]\{-}\<in\>[^:]\{-}\ze\s*%>/ containedin=@ecoRegions
 
 " Define the default highlighting.
 
@@ -60,6 +71,7 @@ hi def link ecoDelimiter Delimiter
 hi def link ecoComment Comment
 hi def link ecoEnd coffeeConditional
 hi def link ecoIndentColon None
+hi def link ecoMissingColonError Error
 
 let b:current_syntax = 'eco'
 
